@@ -18,5 +18,6 @@ Core features include:
 
 ## Project Management
 We are using Jira to manage tasks and track progress
+Link to Jira: https://uflcen3101-group4-f25.atlassian.net/jira/software/projects/SCRUM/summary
 
 
