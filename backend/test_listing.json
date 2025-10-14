@@ -1,0 +1,13 @@
+{
+    "address": "1642 W University Ave, Gainesville",
+    "createdAt": "timestamp",
+    "description": "Nice apartment by Midtown",
+    "email": "joseph.guzman@ufl.edu",
+    "isFurnished": true,
+    "link": "https://stadiumhousegainesville.com/",
+    "parking": true,
+    "petsAllowed": true,
+    "photos": ["https://www.google.com/imgres?q=stadium%20house&imgurl=https%3A%2F%2Fstadiumhousegainesville.com%2Fwp-content%2Fuploads%2F2024%2F08%2FDJI_0012_1.jpg&imgrefurl=https%3A%2F%2Fstadiumhousegainesville.com%2Fgallery%2F&docid=_pdEOA9cOSWN1M&tbnid=BJol2LUgaOb9hM&vet=12ahUKEwiH7sWzzaSQAxUWFmIAHcr4McgQM3oECBoQAA..i&w=2000&h=1498&hcb=2&ved=2ahUKEwiH7sWzzaSQAxUWFmIAHcr4McgQM3oECBoQAA", "https://www.google.com/imgres?q=stadium%20house&imgurl=https%3A%2F%2Fstadiumhousegainesville.com%2Fwp-content%2Fuploads%2F2021%2F07%2FA1-1.png&imgrefurl=https%3A%2F%2Fstadiumhousegainesville.com%2Ffloorplans%2F&docid=KL9NWbfpOxLoHM&tbnid=MF3Xikq8NPKYmM&vet=12ahUKEwiH7sWzzaSQAxUWFmIAHcr4McgQM3oECCcQAA..i&w=1031&h=750&hcb=2&ved=2ahUKEwiH7sWzzaSQAxUWFmIAHcr4McgQM3oECCcQAA"],
+    "unit_name": "Stadium House",
+    "userID": 123
+}
