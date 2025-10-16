@@ -1,2 +1,6 @@
 Flask==3.0.3
 firebase-admin==6.5.0
+fastapi
+uvicorn[standard]
+passlib[bcrypt]
+python-jose[cryptography]
