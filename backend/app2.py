@@ -16,6 +16,7 @@ def db():
     conn.row_factory = sqlite3.Row
     return conn
 
+// temporary DB until I work with the main DB
 def init_db():
     conn = db()
     conn.executescript("""
@@ -114,6 +115,7 @@ def _startup():
 def health():
     return {"status": "ok"}
 
+//accepts email and password. rejects non uf emails. hashes the password and stores in DB
 @app.post("/auth/register", response_model=UserOut, status_code=201)
 def register(body: RegisterIn):
     if not is_uf_email(body.email):
@@ -132,6 +134,7 @@ def register(body: RegisterIn):
     finally:
         conn.close()
 
+// checks the hash, creates a JWT token to allow you to be active for 2 hours
 @app.post("/auth/login")
 def login(body: LoginIn):
     conn = db()
@@ -144,6 +147,7 @@ def login(body: LoginIn):
     token = create_token(sub=str(row["id"]), hours=2)
     return {"token": token, "user": {"id": row["id"], "email": row["email"], "is_verified": bool(row["is_verified"])}}
 
+// reads the JWT from authorization and returns the current user
 @app.get("/auth/me", response_model=UserOut)
 def me(current=Depends(get_current_user)):
     return current
@@ -151,6 +155,7 @@ def me(current=Depends(get_current_user)):
 def normalize_pair(a: int, b: int) -> Tuple[int, int]:
     return (a, b) if a < b else (b, a)
 
+//checks if there is a thread between the user and another user. if there is, it returns the existing one, otherwise, it creates one
 @app.post("/threads", response_model=ThreadOut, status_code=201)
 def create_thread(body: ThreadIn, current=Depends(get_current_user)):
     if body.other_user_id == current["id"]:
@@ -174,6 +179,7 @@ def create_thread(body: ThreadIn, current=Depends(get_current_user)):
     conn.close()
     return dict(t)
 
+//returns all threads with the current user
 @app.get("/threads", response_model=List[ThreadOut])
 def my_threads(current=Depends(get_current_user)):
     conn = db()
@@ -183,6 +189,8 @@ def my_threads(current=Depends(get_current_user)):
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+//confirms that the user is one of the people in the thread, if so, it inserts the message and returns it
 
 @app.post("/messages", response_model=MessageOut, status_code=201)
 def send_message(body: MessageIn, current=Depends(get_current_user)):
@@ -203,6 +211,7 @@ def send_message(body: MessageIn, current=Depends(get_current_user)):
     conn.close()
     return dict(m)
 
+// returns the messages in the thred in the order in which it came
 @app.get("/threads/{thread_id}/messages", response_model=List[MessageOut])
 def get_messages(thread_id: int, current=Depends(get_current_user)):
     conn = db()
@@ -219,3 +228,4 @@ def get_messages(thread_id: int, current=Depends(get_current_user)):
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
