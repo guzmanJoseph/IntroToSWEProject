@@ -7,6 +7,14 @@ import "./App.css";
 function App() {
   const [count, setCount] = useState(0);
 
+  function openNav() {
+    document.getElementById("Sidepanel").style.width = "250px";
+  }
+
+  function closeNav() {
+    document.getElementById("Sidepanel").style.width = "0";
+  }
+
   return (
     <>
       <div
@@ -32,15 +40,23 @@ function App() {
 
           {/* Add listing button and hamburger menu goes here */}
           <div className="flex items-center space-x-4">
-            <h2 className="drop-shadow-[2px_2px_0_black] drop-shadow-[-2px_-2px_0_black] text-2xl font-bold">
-              Add Listing
-            </h2>
+            <h2 className="text-2xl font-bold">Add Listing</h2>
 
-            <div className="space-y-0.75 p-3 bg-blue-500 rounded-full cursor-pointer hover:bg-black/70 transition">
-              <div className="w-4 h-0.5 bg-white"></div>
-              <div className="w-4 h-0.5 bg-white"></div>
-              <div className="w-4 h-0.5 bg-white"></div>
+            {/* ✅ Put the side panel here */}
+            <div id="Sidepanel" className="sidepanel">
+              <button onClick={closeNav} className="closebtn">
+                &times;
+              </button>
+              <a href="#">Home</a>
+              <a href="#">About</a>
+              <a href="#">Services</a>
+              <a href="#">Contact</a>
             </div>
+
+            {/* ✅ Hamburger button */}
+            <button className="openbtn" onClick={openNav}>
+              &#9776;
+            </button>
           </div>
         </div>
 
