@@ -21,3 +21,8 @@ We are using Jira to manage tasks and track progress
 Link to Jira: https://uflcen3101-group4-f25.atlassian.net/jira/software/projects/SCRUM/summary
 
 
+Team Roles: 
+Frontend Developer - Brando Santana
+Backend Developer - Rocco Tammone
+Full-Stack Developer - Joshua Rivera
+Database Administrator - Joseph Guzman
