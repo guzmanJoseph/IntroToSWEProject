@@ -42,7 +42,7 @@ function App() {
           <div className="flex items-center space-x-4">
             <h2 className="text-2xl font-bold">Add Listing</h2>
 
-            {/* ✅ Put the side panel here */}
+            {/* Put the side panel here */}
             <div id="Sidepanel" className="sidepanel">
               <button onClick={closeNav} className="closebtn">
                 &times;
@@ -53,7 +53,7 @@ function App() {
               <a href="#">Contact</a>
             </div>
 
-            {/* ✅ Hamburger button */}
+            {/* Hamburger button */}
             <button className="openbtn" onClick={openNav}>
               &#9776;
             </button>
