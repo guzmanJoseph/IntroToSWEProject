@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/FrontPage";
 import About from "./pages/About";
 import AddListing from "./pages/AddListing";
-import LoginSignup from "./pages/LoginSignup";
+import Login from "./pages/Login";
 import GKLogo from "./assets/GatorKeys-Logo.png";
 import "./App.css";
 
@@ -45,7 +45,7 @@ function App() {
             <Link to="/">Home</Link>
             <Link to="/about">About</Link>
             <Link to="/add-listing">Add Listing</Link>
-            <Link to="/login-signup">Log in or sign up</Link>
+            <Link to="/login">Log in or sign up</Link>
           </div>
 
           <button className="openbtn" onClick={openNav}>
@@ -59,7 +59,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/add-listing" element={<AddListing />} />
-        <Route path="/login-signup" element={<LoginSignup />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
   );

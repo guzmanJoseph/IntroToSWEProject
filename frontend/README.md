@@ -4,6 +4,7 @@
 
 - Node.js v22.20.0+ (Download from https://nodejs.org)
 - npm (comes with Node.js)
+- npm install bootstrap
 
 ## Run Instructions
 
