@@ -11,7 +11,6 @@ import AddListing from "./pages/AddListing";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Navbar from "./components/Navbar";
-import GKLogo from "./assets/GatorKeys-Logo.png";
 import "./App.css";
 
 function Layout() {

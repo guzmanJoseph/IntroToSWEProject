@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import GKLogo from "../assets/GatorKeys-Logo.png";
 import { useState } from "react";
-import "./Navbar.css"; // import your styles
+import "./Navbar.css";
 
 export default function Navbar() {
   const [sideOpen, setSideOpen] = useState(false);
