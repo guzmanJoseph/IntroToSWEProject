@@ -1,0 +1,21 @@
+.signUp-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-image: url("https://sweetwatergainesville.com/wp-content/uploads/2023/10/Sweetwater_Exterior-1.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  color: rgb(33, 109, 252);
+  margin-bottom: 20px;
+}
+
+button {
+  border-radius: var(--radius-md);
+}

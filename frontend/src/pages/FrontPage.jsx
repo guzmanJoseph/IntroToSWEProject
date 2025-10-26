@@ -8,7 +8,7 @@ export default function Home() {
       }}
     >
       <div className="relative z-10 flex flex-col items-center justify-center pt-100">
-        <p className="font-bold text-5xl mb-6 drop-shadow-[2px_2px_0_black]">
+        <p className="font-bold text-5xl mb-6 drop-shadow-[2px_2px_0_black] text-orange-400">
           Find your perfect sublease
         </p>
         <input

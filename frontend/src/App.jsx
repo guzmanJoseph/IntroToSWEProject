@@ -3,6 +3,7 @@ import Home from "./pages/FrontPage";
 import About from "./pages/About";
 import AddListing from "./pages/AddListing";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import GKLogo from "./assets/GatorKeys-Logo.png";
 import "./App.css";
 
@@ -60,6 +61,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/add-listing" element={<AddListing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signUp" element={<SignUp />} />
       </Routes>
     </Router>
   );
