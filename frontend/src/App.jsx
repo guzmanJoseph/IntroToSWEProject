@@ -11,6 +11,7 @@ import AddListing from "./pages/AddListing";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Navbar from "./components/Navbar";
+import ScrollToTop from "./components/ScrollToTop";
 import "./App.css";
 
 function Layout() {
@@ -27,6 +28,7 @@ function Layout() {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       {/* Routes */}
       <Routes>
         <Route element={<Layout />}>
