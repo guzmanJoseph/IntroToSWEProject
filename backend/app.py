@@ -43,6 +43,31 @@ def read_listings():
   except Exception as e:
     print(e)
 
+# adds the user account information to the database
+def add_account(file_path):
+   with open(file_path, "r") as file:
+    data = json.load(file)
+    db.collection("accounts").add(data)
+    print("Should work") 
+
+# return true if the users account is found in the database, false otherwise
+def found_account(email, password):
+   try:
+      accounts_reference = db.collection("accounts")
+      query = accounts_reference.where("email", "==", email).where("password", "==", password).get()
+
+      if query:
+         print("Account Found.")
+         return True
+      else:
+         print("Account not found.")
+         return False
+
+   except Exception as e:
+      print("Error while checking account:", e)
+      return None
+
+
 ######### Listings API #########
 # Returns all listing as a JSON array.
 @app.get("/listings")
@@ -143,4 +168,6 @@ def get_conversation():
 
 
 if __name__ == "__main__":
-  app.run(debug=True)
+  #app.run(debug=True)
+  #add_listings(r"C:\Users\josep\OneDrive\Desktop\IntroToSWEProject\IntroToSWEProject-1\backend\test_listing.json");
+  add_account("backend/test_account.json")
