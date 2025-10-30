@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from datetime import datetime
 from firebase_admin_setup import db
 import json
 
 app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
 
 # This will touch the client. If the something is wrong like credentials, an error will raise
 @app.get("/health")
@@ -72,9 +74,13 @@ def found_account(email, password):
 # Returns all listing as a JSON array.
 @app.get("/listings")
 def list_listings():
-    docs = db.collection("listings").stream()
-    listings = [d.to_dict() for d in docs]
-    return jsonify(listings)
+    docs = (
+        db.collection("listings")
+          .order_by("createdAt", direction="DESCENDING")
+          .limit(20)
+          .stream()
+    )
+    return jsonify([d.to_dict() for d in docs])
 
 # POST /listings. make a "created at" timestampe for consistency
 @app.post("/listings")
@@ -168,6 +174,4 @@ def get_conversation():
 
 
 if __name__ == "__main__":
-  #app.run(debug=True)
-  #add_listings(r"C:\Users\josep\OneDrive\Desktop\IntroToSWEProject\IntroToSWEProject-1\backend\test_listing.json");
-  add_account("backend/test_account.json")
+  app.run(debug=True)
