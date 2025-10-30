@@ -7,7 +7,6 @@ export default function SignUp() {
       <div className="min-h-screen flex items-center justify-center bg-transparent">
         <form className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm">
           <h1 className="text-2x1 font-bold mb-6 text-center">Sign Up</h1>
-
           <label htmlFor="FirstName" className="form-label fw-semibold">
             First Name
           </label>
@@ -17,7 +16,6 @@ export default function SignUp() {
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-
           <label htmlFor="LastName" className="form-label fw-semibold">
             Last Name
           </label>
@@ -27,7 +25,6 @@ export default function SignUp() {
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-
           <label htmlFor="DOB" className="form-label fw-semibold">
             Date of Birth
           </label>
@@ -91,7 +88,20 @@ export default function SignUp() {
             </select>
           </div>
 
-          {/* Should we ask for gender? */}
+          <label htmlFor="Gender" className="form-label fw-semibold">
+            Gender
+          </label>
+          <select
+            name="gender"
+            className="w-full p-2 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          >
+            <option value="">Select gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="nonbinary">Non-Binary</option>
+            <option value="prefer-not">Prefer not to say</option>
+          </select>
 
           <label htmlFor="Email" className="form-label fw-semibold">
             UF Email
@@ -102,7 +112,6 @@ export default function SignUp() {
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-
           <label htmlFor="Password" className="form-label fw-semibold">
             Password
           </label>
@@ -112,7 +121,6 @@ export default function SignUp() {
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-
           <label htmlFor="RePassword" className="form-label fw-semibold">
             Re-enter Password
           </label>
@@ -122,7 +130,6 @@ export default function SignUp() {
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-
           <button
             type="submit"
             className="w-full h-10 bg-blue-500 text-white hover:bg-blue-600 transition"
