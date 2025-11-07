@@ -1,8 +1,10 @@
 import PopularListings from "../components/PopularListings";
+import NewListings from "../components/NewListings";
 
-export default function Home() {
+export default function FrontPage() {
   return (
     <div>
+      {/* Hero section */}
       <div
         className="min-h-screen bg-cover bg-center object-cover"
         style={{
@@ -21,9 +23,14 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* Static Popular grid */}
       <div className="mt-10">
         <PopularListings />
       </div>
+
+      {/* Live “New Listings” grid */}
+      <NewListings />
     </div>
   );
 }
