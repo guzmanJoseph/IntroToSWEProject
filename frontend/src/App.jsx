@@ -10,6 +10,7 @@ import About from "./pages/About";
 import AddListing from "./pages/AddListing";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
 import Navbar from "./components/Navbar";
 import ScrollToTop from "./components/ScrollToTop";
 import "./App.css";
@@ -37,6 +38,7 @@ function App() {
           <Route path="/add-listing" element={<AddListing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signUp" element={<SignUp />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
     </Router>

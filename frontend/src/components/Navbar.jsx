@@ -50,6 +50,9 @@ export default function Navbar() {
           <Link to="/login" onClick={closeNav}>
             Log in or sign up
           </Link>
+          <Link to="/profile" onClick={closeNav}>
+            Profile
+          </Link>
         </div>
 
         {/* Hamburger Button */}
