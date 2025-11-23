@@ -131,6 +131,51 @@ def login_user():
   return jsonify({"message": "Login ok", "user": found[0].to_dict()}), 200
 
 
+@app.post("/listings/filter")
+def filter_listings():
+    body = request.get_json(force=True) or {}
+    max_price = body.get("maxPrice")
+    furnished = body.get("furnished")
+    parking = body.get("parking")
+    start_date = body.get("startDate")
+    end_date = body.get("endDate")
+
+    coll = db.collection("listings")
+
+    # Start building the query
+    query = coll
+
+    # Max price filter
+    if max_price:
+        query = query.where("price", "<=", int(max_price))
+
+    # Furnished filter
+    if furnished is not None:
+        query = query.where("furnished", "==", furnished)
+
+    # Parking filter
+    if parking == "yes":
+        query = query.where("parking", "==", True)
+    elif parking == "no":
+        query = query.where("parking", "==", False)
+
+    # Firestore requires inequality filters to be on SAME field
+    # So we apply date range by filtering results after retrieval
+    docs = query.stream()
+    results = [doc.to_dict() for doc in docs]
+
+    # Date filtering (client-side)
+    if start_date:
+        start_date = datetime.fromisoformat(start_date)
+        results = [r for r in results if datetime.fromisoformat(r["move_in"]) >= start_date]
+
+    if end_date:
+        end_date = datetime.fromisoformat(end_date)
+        results = [r for r in results if datetime.fromisoformat(r["move_out"]) <= end_date]
+
+    print("Filtered results:", results)
+    return jsonify(results), 200
+
 #### Messaging ####
 @app.post("/messages")
 def send_message():
