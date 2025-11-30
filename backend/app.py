@@ -1,14 +1,22 @@
 from flask import Flask, request, jsonify
-import json
+from flask_cors import CORS
 from datetime import datetime
 from firebase_admin_setup import db
-from user_creation import create_user, get_user, update_user, delete_user
+import json
 
-"""
-Eventually, I want to change the logic so the method takes in a json file and adds that to the firebase, so far the method is able to 
-read a local json file and add it to the firebase
-"""
+app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
 
+# This will touch the client. If the something is wrong like credentials, an error will raise
+@app.get("/health")
+def health():
+    try:
+        _ = list(db.collections())
+        return jsonify({"status": "ok", "firebase": "connected"})
+    except Exception as e:
+        return jsonify({"status": "error", "details": str(e)}), 500
+
+######### HELPER FUNCTIONS #########
 # users are able to add listings by adding in a json file
 def add_listings(file_path):
    with open(file_path, "r") as file:
@@ -17,11 +25,6 @@ def add_listings(file_path):
 
     db.collection("listings").add(data)
     print("Should work?")
-
-"""
-At some point, I want to be able to filter through the listings based on what the user searches for, make separate functions for this
-and display the results to the back-end and the front-end
-"""
 
 # this method reads all the info from the listings collection
 def read_listings():
@@ -42,49 +45,178 @@ def read_listings():
   except Exception as e:
     print(e)
 
-# Initialize Flask app
-app = Flask(__name__)
+# adds the user account information to the database
+def add_account(file_path):
+   with open(file_path, "r") as file:
+    data = json.load(file)
+    db.collection("accounts").add(data)
+    print("Should work") 
 
-# User management endpoints
-@app.route('/api/users', methods=['POST'])
-def create_user_endpoint():
-    """Create a new user"""
-    try:
-        user_data = request.get_json()
-        result = create_user(user_data)
-        return jsonify(result), 200 if result['success'] else 400
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+# return true if the users account is found in the database, false otherwise
+def found_account(email, password):
+   try:
+      accounts_reference = db.collection("accounts")
+      query = accounts_reference.where("email", "==", email).where("password", "==", password).get()
 
-@app.route('/api/users/<user_id>', methods=['GET'])
-def get_user_endpoint(user_id):
-    """Get user by ID"""
-    try:
-        result = get_user(user_id)
-        return jsonify(result), 200 if result['success'] else 404
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+      if query:
+         print("Account Found.")
+         return True
+      else:
+         print("Account not found.")
+         return False
 
-@app.route('/api/users/<user_id>', methods=['PUT'])
-def update_user_endpoint(user_id):
-    """Update user by ID"""
-    try:
-        update_data = request.get_json()
-        result = update_user(user_id, update_data)
-        return jsonify(result), 200 if result['success'] else 400
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+   except Exception as e:
+      print("Error while checking account:", e)
+      return None
 
-@app.route('/api/users/<user_id>', methods=['DELETE'])
-def delete_user_endpoint(user_id):
-    """Delete user by ID"""
-    try:
-        result = delete_user(user_id)
-        return jsonify(result), 200 if result['success'] else 400
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+
+######### Listings API #########
+# Returns all listing as a JSON array.
+@app.get("/listings")
+def list_listings():
+    docs = (
+        db.collection("listings")
+          .order_by("createdAt", direction="DESCENDING")
+          .limit(20)
+          .stream()
+    )
+    return jsonify([d.to_dict() for d in docs])
+
+# POST /listings. make a "created at" timestampe for consistency
+@app.post("/listings")
+def create_listing():
+    data = request.get_json(force=True)
+    data = data or {}
+    data["createdAt"] = datetime.utcnow()
+    db.collection("listings").add(data)
+    return jsonify({"ok": True}), 201
+
+#### AUTHENTICATION ####
+@app.post("/auth/register")
+def register_user():
+  body = request.get_json(force=True) or {}
+  email = body.get("email")
+
+  # Basic UF email check
+  if not email or not email.endswith("@ufl.edu"):
+      return jsonify({"error": "Email must be a @ufl.edu address"}), 400
+
+  # See if a user doc with this email already exists
+  existing = db.collection("users").where("email", "==", email).limit(1).get()
+  if existing:
+      return jsonify({"error": "User already exists"}), 400
+
+  user_doc = {
+      "email": email,
+      "createdAt": datetime.utcnow()
+  }
+  db.collection("users").add(user_doc)
+
+  # We return the user data we stored (no doc id here; you can include it later)
+  return jsonify({"message": "Registered", "user": user_doc}), 201
+
+@app.post("/auth/login")
+def login_user():
+  body = request.get_json(force=True) or {}
+  email = body.get("email")
+
+  if not email or not email.endswith("@ufl.edu"):
+      return jsonify({"error": "Email must be a @ufl.edu address"}), 400
+
+  # Look up that user in Firestore
+  found = db.collection("users").where("email", "==", email).limit(1).get()
+  if not found:
+      return jsonify({"error": "User not found"}), 404
+
+  return jsonify({"message": "Login ok", "user": found[0].to_dict()}), 200
+
+
+@app.post("/listings/filter")
+def filter_listings():
+    body = request.get_json(force=True) or {}
+    max_price = body.get("maxPrice")
+    furnished = body.get("furnished")
+    parking = body.get("parking")
+    start_date = body.get("startDate")
+    end_date = body.get("endDate")
+
+    coll = db.collection("listings")
+
+    # Start building the query
+    query = coll
+
+    # Max price filter
+    if max_price:
+        query = query.where("price", "<=", int(max_price))
+
+    # Furnished filter
+    if furnished is not None:
+        query = query.where("furnished", "==", furnished)
+
+    # Parking filter
+    if parking == "yes":
+        query = query.where("parking", "==", True)
+    elif parking == "no":
+        query = query.where("parking", "==", False)
+
+    # Firestore requires inequality filters to be on SAME field
+    # So we apply date range by filtering results after retrieval
+    docs = query.stream()
+    results = [doc.to_dict() for doc in docs]
+
+    # Date filtering (client-side)
+    if start_date:
+        start_date = datetime.fromisoformat(start_date)
+        results = [r for r in results if datetime.fromisoformat(r["move_in"]) >= start_date]
+
+    if end_date:
+        end_date = datetime.fromisoformat(end_date)
+        results = [r for r in results if datetime.fromisoformat(r["move_out"]) <= end_date]
+
+    print("Filtered results:", results)
+    return jsonify(results), 200
+
+#### Messaging ####
+@app.post("/messages")
+def send_message():
+  body = request.get_json(force=True) or {}
+  sender = body.get("sender_email")
+  receiver = body.get("receiver_email")
+  text = body.get("text")
+
+  if not sender or not receiver or not text:
+      return jsonify({"error": "sender_email, receiver_email, and text are required"}), 400
+
+  msg = {
+      "sender": sender,
+      "receiver": receiver,
+      "text": text,
+      "timestamp": datetime.utcnow()
+  }
+  db.collection("messages").add(msg)
+  return jsonify({"message": "sent", "data": msg}), 201
+
+
+@app.get("/messages")
+def get_conversation():
+  a = request.args.get("sender")
+  b = request.args.get("receiver")
+  if not a or not b:
+      return jsonify({"error": "Query params 'sender' and 'receiver' are required"}), 400
+
+  coll = db.collection("messages")
+
+  # Query 1: messages sent A -> B
+  q1 = coll.where("sender", "==", a).where("receiver", "==", b).stream()
+  # Query 2: messages sent B -> A
+  q2 = coll.where("sender", "==", b).where("receiver", "==", a).stream()
+
+  msgs = [doc.to_dict() for doc in list(q1) + list(q2)]
+
+  msgs.sort(key=lambda m: m.get("timestamp"))
+
+  return jsonify(msgs), 200
+
 
 if __name__ == "__main__":
-  # add_listings("backend/test_listing.json")
-  # read_listings()
-  app.run(debug=True, port=5000)
+  app.run(debug=True)
