@@ -191,9 +191,13 @@ def send_message():
       "sender": sender,
       "receiver": receiver,
       "text": text,
-      "timestamp": datetime.utcnow()
+      "timestamp": datetime.utcnow(),
+      "read": False
   }
-  db.collection("messages").add(msg)
+  doc_ref = db.collection("messages").add(msg)
+  msg["id"] = doc_ref[1].id
+  # Convert timestamp to ISO format string for JSON serialization
+  msg["timestamp"] = msg["timestamp"].isoformat()
   return jsonify({"message": "sent", "data": msg}), 201
 
 
@@ -211,11 +215,129 @@ def get_conversation():
   # Query 2: messages sent B -> A
   q2 = coll.where("sender", "==", b).where("receiver", "==", a).stream()
 
-  msgs = [doc.to_dict() for doc in list(q1) + list(q2)]
+  msgs = []
+  for doc in list(q1) + list(q2):
+    msg_data = doc.to_dict()
+    msg_data["id"] = doc.id
+    # Convert timestamp to ISO format string if it's a datetime object
+    if isinstance(msg_data.get("timestamp"), datetime):
+      msg_data["timestamp"] = msg_data["timestamp"].isoformat()
+    msgs.append(msg_data)
 
-  msgs.sort(key=lambda m: m.get("timestamp"))
+  msgs.sort(key=lambda m: m.get("timestamp", ""))
 
   return jsonify(msgs), 200
+
+
+@app.get("/messages/conversations")
+def get_conversations():
+  """
+  Get all conversations for a user.
+  Returns a list of conversations with the other participant's email and last message.
+  """
+  user_email = request.args.get("user_email")
+  if not user_email:
+      return jsonify({"error": "Query param 'user_email' is required"}), 400
+
+  coll = db.collection("messages")
+  
+  # Get all messages where user is sender or receiver
+  all_messages = coll.where("sender", "==", user_email).stream()
+  all_messages = list(all_messages) + list(coll.where("receiver", "==", user_email).stream())
+  
+  # Build a map of other participants to their conversation data
+  conversations_map = {}
+  
+  # First pass: build conversation structure and find last message
+  for doc in all_messages:
+    msg_data = doc.to_dict()
+    other_participant = msg_data["receiver"] if msg_data["sender"] == user_email else msg_data["sender"]
+    
+    # Convert timestamp if needed
+    timestamp = msg_data.get("timestamp")
+    if isinstance(timestamp, datetime):
+      timestamp = timestamp.isoformat()
+    elif hasattr(timestamp, 'isoformat'):
+      timestamp = timestamp.isoformat()
+    
+    # Initialize conversation if needed
+    if other_participant not in conversations_map:
+      conversations_map[other_participant] = {
+        "other_user_email": other_participant,
+        "last_message": "",
+        "last_timestamp": "",
+        "unread_count": 0
+      }
+    
+    # Update last message if this is newer
+    current_last = conversations_map[other_participant]["last_timestamp"]
+    if not current_last or timestamp > current_last:
+      conversations_map[other_participant]["last_message"] = msg_data.get("text", "")
+      conversations_map[other_participant]["last_timestamp"] = timestamp
+  
+  # Second pass: count unread messages for each conversation
+  for other_participant in conversations_map.keys():
+    unread_query = coll.where("sender", "==", other_participant)\
+                       .where("receiver", "==", user_email)\
+                       .where("read", "==", False)\
+                       .stream()
+    conversations_map[other_participant]["unread_count"] = len(list(unread_query))
+  
+  # Convert to list and sort by last timestamp (most recent first)
+  conversations = list(conversations_map.values())
+  conversations.sort(key=lambda c: c.get("last_timestamp", ""), reverse=True)
+  
+  return jsonify(conversations), 200
+
+
+@app.put("/messages/read")
+def mark_messages_read():
+  """
+  Mark messages as read for a conversation between two users.
+  """
+  body = request.get_json(force=True) or {}
+  user_email = body.get("user_email")
+  other_user_email = body.get("other_user_email")
+  
+  if not user_email or not other_user_email:
+      return jsonify({"error": "user_email and other_user_email are required"}), 400
+
+  coll = db.collection("messages")
+  
+  # Find all unread messages sent to the user from the other user
+  unread_messages = coll.where("sender", "==", other_user_email)\
+                        .where("receiver", "==", user_email)\
+                        .where("read", "==", False)\
+                        .stream()
+  
+  updated_count = 0
+  for doc in unread_messages:
+    doc.reference.update({"read": True})
+    updated_count += 1
+  
+  return jsonify({"message": "marked as read", "count": updated_count}), 200
+
+
+@app.get("/users/<email>")
+def get_user_by_email(email):
+  """
+  Get user information by email.
+  Useful for getting user names to display in conversations.
+  """
+  try:
+    users = db.collection("users").where("email", "==", email).limit(1).get()
+    if not users:
+      return jsonify({"error": "User not found"}), 404
+    
+    user_data = users[0].to_dict()
+    user_data["id"] = users[0].id
+    # Convert timestamp if present
+    if "createdAt" in user_data and isinstance(user_data["createdAt"], datetime):
+      user_data["createdAt"] = user_data["createdAt"].isoformat()
+    
+    return jsonify(user_data), 200
+  except Exception as e:
+    return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
