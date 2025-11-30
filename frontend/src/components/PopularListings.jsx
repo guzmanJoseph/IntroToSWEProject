@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const PopularListings = () => {
   const listings = [
@@ -59,9 +60,11 @@ const PopularListings = () => {
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {listings.map((listing) => (
-          <div
+          <Link
             key={listing.id}
-            className="bg-white rounded-2x1 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+            to={`/listing/${listing.id}`}
+            state={{ listing }}
+            className="block bg-white rounded-2x1 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
           >
             <img
               src={listing.image}
@@ -75,7 +78,7 @@ const PopularListings = () => {
               <p className="text-gray-600">{listing.location}</p>
               <p className="text-blue-500 font-bold mt-2">{listing.price}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

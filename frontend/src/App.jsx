@@ -11,8 +11,10 @@ import AddListing from "./pages/AddListing";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
+import ListingDetail from "./pages/ListingDetail";
 import Navbar from "./components/Navbar";
 import ScrollToTop from "./components/ScrollToTop";
+import ChatWidget from "./components/ChatWidget";
 import "./App.css";
 
 function Layout() {
@@ -30,6 +32,7 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <ChatWidget />
       {/* Routes */}
       <Routes>
         <Route element={<Layout />}>
@@ -39,6 +42,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signUp" element={<SignUp />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/listing/:id" element={<ListingDetail />} />
         </Route>
       </Routes>
     </Router>
