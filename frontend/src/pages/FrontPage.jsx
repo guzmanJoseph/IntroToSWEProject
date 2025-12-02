@@ -28,7 +28,7 @@ export default function FrontPage() {
     };
 
     // Remove undefined/empty values
-    Object.keys(filters).forEach(key => {
+    Object.keys(filters).forEach((key) => {
       if (filters[key] === undefined || filters[key] === "") {
         delete filters[key];
       }
@@ -88,7 +88,7 @@ export default function FrontPage() {
           </button>
         </div>
       )}
-      
+
       {filteredListings !== null ? (
         <div className="mt-4">
           <PopularListings listings={filteredListings} />
@@ -106,7 +106,6 @@ export default function FrontPage() {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-xl w-96 shadow-2xl relative">
-
             <button
               onClick={() => setIsOpen(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"
@@ -119,7 +118,6 @@ export default function FrontPage() {
             </h2>
 
             <div className="space-y-4">
-
               {/* Title */}
               <div>
                 <label className="block font-semibold">Name</label>
@@ -138,7 +136,7 @@ export default function FrontPage() {
                 <input
                   type="number"
                   className="w-full border p-2 rounded"
-                  placeholder="900"
+                  placeholder="0"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                 />
@@ -170,7 +168,9 @@ export default function FrontPage() {
 
               {/* Move-out */}
               <div>
-                <label className="block font-semibold mb-1">Move-out Date</label>
+                <label className="block font-semibold mb-1">
+                  Move-out Date
+                </label>
                 <input
                   type="date"
                   className="w-full border p-2 rounded"
@@ -181,7 +181,9 @@ export default function FrontPage() {
 
               {/* Parking */}
               <div>
-                <label className="block font-semibold mb-1">Parking Availability</label>
+                <label className="block font-semibold mb-1">
+                  Parking Availability
+                </label>
 
                 <div className="flex flex-col gap-1 mt-1">
                   <label className="flex items-center gap-2">
@@ -227,7 +229,6 @@ export default function FrontPage() {
             >
               Apply Filters
             </button>
-
           </div>
         </div>
       )}
