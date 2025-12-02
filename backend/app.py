@@ -273,48 +273,89 @@ def update_user_profile(email):
 
 @app.post("/listings/filter")
 def filter_listings():
-    body = request.get_json(force=True) or {}
-    max_price = body.get("maxPrice")
-    furnished = body.get("furnished")
-    parking = body.get("parking")
-    start_date = body.get("startDate")
-    end_date = body.get("endDate")
+    try:
+        body = request.get_json(force=True) or {}
+        title = body.get("title", "").strip()
+        max_price = body.get("maxPrice")
+        furnished = body.get("furnished")
+        parking = body.get("parking")
+        start_date = body.get("startDate")
+        end_date = body.get("endDate")
 
-    coll = db.collection("listings")
+        coll = db.collection("listings")
 
-    # Start building the query
-    query = coll
+        # Start building the query
+        query = coll
 
-    # Max price filter
-    if max_price:
-        query = query.where("price", "<=", int(max_price))
+        # Max price filter
+        if max_price:
+            try:
+                max_price_int = int(max_price)
+                query = query.where("price", "<=", max_price_int)
+            except (ValueError, TypeError):
+                pass  # Skip invalid price
 
-    # Furnished filter
-    if furnished is not None:
-        query = query.where("furnished", "==", furnished)
+        # Get all results first (Firestore has limitations on multiple where clauses)
+        # We'll apply most filters client-side to avoid query complexity
+        docs = query.stream()
+        results = []
+        for doc in docs:
+            listing_data = doc.to_dict()
+            listing_data["id"] = doc.id
+            results.append(listing_data)
 
-    # Parking filter
-    if parking == "yes":
-        query = query.where("parking", "==", True)
-    elif parking == "no":
-        query = query.where("parking", "==", False)
+        # Apply client-side filters
+        
+        # Title filter (case-insensitive search)
+        if title:
+            title_lower = title.lower()
+            results = [r for r in results if title_lower in (r.get("title", "") or "").lower()]
 
-    # Firestore requires inequality filters to be on SAME field
-    # So we apply date range by filtering results after retrieval
-    docs = query.stream()
-    results = [doc.to_dict() for doc in docs]
+        # Furnished filter (handle both boolean True and truthy values)
+        if furnished is True:
+            results = [r for r in results if r.get("furnished") is True]
 
-    # Date filtering (client-side)
-    if start_date:
-        start_date = datetime.fromisoformat(start_date)
-        results = [r for r in results if datetime.fromisoformat(r["move_in"]) >= start_date]
+        # Parking filter (handle string values like "included", "additional-fee", "none")
+        if parking == "yes":
+            results = [r for r in results if r.get("parking") in [True, "included", "yes", "available"]]
+        elif parking == "no":
+            results = [r for r in results if r.get("parking") in [False, "none", "no", None]]
 
-    if end_date:
-        end_date = datetime.fromisoformat(end_date)
-        results = [r for r in results if datetime.fromisoformat(r["move_out"]) <= end_date]
+        # Date filtering (using availableFrom and availableTo fields)
+        if start_date:
+            try:
+                start_date_obj = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+                results = [r for r in results if r.get("availableFrom")]
+                results = [
+                    r for r in results 
+                    if datetime.fromisoformat(r["availableFrom"].replace("Z", "+00:00")) >= start_date_obj
+                ]
+            except (ValueError, KeyError, TypeError) as e:
+                print(f"Error parsing start_date: {e}")
 
-    print("Filtered results:", results)
-    return jsonify(results), 200
+        if end_date:
+            try:
+                end_date_obj = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                results = [r for r in results if r.get("availableTo")]
+                results = [
+                    r for r in results 
+                    if datetime.fromisoformat(r["availableTo"].replace("Z", "+00:00")) <= end_date_obj
+                ]
+            except (ValueError, KeyError, TypeError) as e:
+                print(f"Error parsing end_date: {e}")
+
+        # Convert timestamps to ISO strings for JSON serialization
+        for r in results:
+            if "createdAt" in r and isinstance(r["createdAt"], datetime):
+                r["createdAt"] = r["createdAt"].isoformat()
+
+        print(f"Filtered results: {len(results)} listings found")
+        return jsonify(results), 200
+    except Exception as e:
+        print(f"Error in filter_listings: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 #### Messaging ####
 @app.post("/messages")

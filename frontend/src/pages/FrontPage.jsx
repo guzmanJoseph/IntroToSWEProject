@@ -1,6 +1,7 @@
 import PopularListings from "../components/PopularListings";
 import NewListings from "../components/NewListings";
 import { useState } from "react";
+import { api } from "../api";
 
 export default function FrontPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,26 +19,28 @@ export default function FrontPage() {
 
   const applyFilters = async () => {
     const filters = {
-      title,
-      maxPrice,
-      furnished,
-      parking,
-      startDate,
-      endDate,
+      title: title.trim() || undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      furnished: furnished ? true : undefined,
+      parking: parking === "any" ? undefined : parking,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
     };
 
-    try {
-      const res = await fetch("http://localhost:5000/listings/filter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(filters),
-      });
+    // Remove undefined/empty values
+    Object.keys(filters).forEach(key => {
+      if (filters[key] === undefined || filters[key] === "") {
+        delete filters[key];
+      }
+    });
 
-      const data = await res.json();
+    try {
+      const data = await api.filterListings(filters);
       console.log("filtered listings:", data);
       setFilteredListings(data);
     } catch (err) {
       console.error("Filter request failed:", err);
+      alert(`Filter failed: ${err.message}`);
     }
 
     setIsOpen(false);
@@ -67,11 +70,37 @@ export default function FrontPage() {
       </div>
 
       {/* Listings — if filtered results exist, show them instead */}
-      <div className="mt-10">
-        <PopularListings listings={filteredListings} />
-      </div>
-
-      <NewListings listings={filteredListings} />
+      {filteredListings !== null && (
+        <div className="mt-10 px-6">
+          <button
+            onClick={() => {
+              setFilteredListings(null);
+              setTitle("");
+              setMaxPrice("");
+              setFurnished(false);
+              setStartDate("");
+              setEndDate("");
+              setParking("");
+            }}
+            className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+      
+      {filteredListings !== null ? (
+        <div className="mt-4">
+          <PopularListings listings={filteredListings} />
+        </div>
+      ) : (
+        <>
+          <div className="mt-10">
+            <PopularListings />
+          </div>
+          <NewListings />
+        </>
+      )}
 
       {/* POPUP MODAL */}
       {isOpen && (

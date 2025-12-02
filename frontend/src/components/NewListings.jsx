@@ -10,13 +10,20 @@ function dollars(v) {
   return `$${Number(v).toLocaleString()}/month`;
 }
 
-export default function NewListings() {
+export default function NewListings({ listings: propListings }) {
   console.log("[NewListings] module loaded");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    // If filtered listings are provided, use them instead of fetching
+    if (propListings) {
+      setListings(propListings);
+      setLoading(false);
+      return;
+    }
+
     console.log("[NewListings] render");
     (async () => {
       try {
@@ -33,7 +40,7 @@ export default function NewListings() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [propListings]);
 
   return (
     <div className="max-w-7x1 mx-auto mt-12 px-6">

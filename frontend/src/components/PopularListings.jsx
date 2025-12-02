@@ -1,8 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const PopularListings = () => {
-  const listings = [
+const fallbackImg =
+  "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop";
+
+function dollars(v) {
+  if (v === undefined || v === null || isNaN(v)) return "";
+  return `$${Number(v).toLocaleString()}/month`;
+}
+
+const PopularListings = ({ listings: propListings }) => {
+  // Use prop listings if provided, otherwise use default hardcoded ones
+  const defaultListings = [
     {
       id: 1,
       title: "Luxury 2BR Apartment Near UF",
@@ -53,6 +62,65 @@ const PopularListings = () => {
     },
   ];
 
+  const listings = propListings || defaultListings;
+
+  // If filtered listings are provided, show them
+  if (propListings) {
+    if (propListings.length === 0) {
+      return (
+        <div className="max-w-7x1 mx-auto mt-12 px-6">
+          <h2 className="text-3x1 font-bold mb-6 text-gray-800">
+            Filtered Results
+          </h2>
+          <p className="text-gray-600">No listings match your filters.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-7x1 mx-auto mt-12 px-6">
+        <h2 className="text-3x1 font-bold mb-6 text-gray-800">
+          Filtered Results ({listings.length})
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          {listings.map((listing, i) => {
+            const slugBase = (listing.title || listing.address || "listing").toString();
+            const slug = encodeURIComponent(
+              slugBase.replace(/[^a-z0-9]+/gi, "-").toLowerCase() + `-${listing.id || i}`
+            );
+            
+            return (
+              <Link
+                key={listing.id || i}
+                to={`/listing/${slug}`}
+                state={{ listing }}
+                className="block bg-white rounded-2x1 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+              >
+                <img
+                  src={listing.imageUrl || listing.image || fallbackImg}
+                  alt={listing.title || "Listing"}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {listing.title || "Untitled"}
+                  </h3>
+                  <p className="text-gray-600">{listing.address || listing.location || "Gainesville, FL"}</p>
+                  {listing.price !== undefined && (
+                    <p className="text-blue-500 font-bold mt-2">
+                      {dollars(listing.price)}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Default view with hardcoded listings
   return (
     <div className="max-w-7x1 mx-auto mt-12 px-6">
       <h2 className="text-3x1 font-bold mb-6 text-gray-800">
