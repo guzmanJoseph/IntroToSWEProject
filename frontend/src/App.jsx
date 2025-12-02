@@ -1,63 +1,69 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import GKLogo from "./assets/GatorKeys-Logo.png";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Outlet,
+} from "react-router-dom";
+import Home from "./pages/FrontPage";
+import About from "./pages/About";
+import AddListing from "./pages/AddListing";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
+import ListingDetail from "./pages/ListingDetail";
+import Navbar from "./components/Navbar";
+import ScrollToTop from "./components/ScrollToTop";
+import ChatWidget from "./components/ChatWidget";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0);
-
+function Layout() {
   return (
     <>
-      <div
-        className="min-h-screen bg-cover bg-center object-cover opacity-100"
-        style={{
-          backgroundImage:
-            "url('https://sweetwatergainesville.com/wp-content/uploads/2023/10/Sweetwater_Exterior-1.jpg')",
-        }}
-      >
-        <div className="flex justify-between items-center px-8">
-          {/* Text on header of page goes here */}
-          <div className="flex items-center space-x-0">
-            <img
-              src={GKLogo}
-              alt="GatorKeys Logo"
-              className="h-15 w-15 mt-5 ml-2"
-            />
-            <h1 className="drop-shadow-[2px_2px_0_black] drop-shadow-[-2px_-2px_0_black] text-6xl font-bold pt-20">
-              <span className="text-blue-500">Gator</span>
-              <span className="text-orange-400">Keys</span>
-            </h1>
-          </div>
-
-          {/* Add listing button and hamburger menu goes here */}
-          <div className="flex items-center space-x-4">
-            <h2 className="drop-shadow-[2px_2px_0_black] drop-shadow-[-2px_-2px_0_black] text-2xl font-bold">
-              Add Listing
-            </h2>
-
-            <div className="space-y-0.75 p-3 bg-blue-500 rounded-full cursor-pointer hover:bg-black/70 transition">
-              <div className="w-4 h-0.5 bg-white"></div>
-              <div className="w-4 h-0.5 bg-white"></div>
-              <div className="w-4 h-0.5 bg-white"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search bar and Text above it goes here */}
-        <div className="relative z-10 flex flex-col items-center justify-center pt-75">
-          <p className="font-bold text-5xl mb-6 drop-shadow-[2px_2px_0_black] drop-shadow-[-2px_-2px_0_black]">
-            {" "}
-            Find your perfect sublease
-          </p>
-          <input
-            type="text"
-            placeholder="Search..."
-            className="ml-4 p-2 border border-orange-400 rounded-lg w-200 bg-white text-black"
-          />
-        </div>
+      <Navbar />
+      <div className="pt-20 bg-gray-300">
+        <Outlet />
       </div>
     </>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <ScrollToTop />
+        <ChatWidget />
+        {/* Routes */}
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route
+              path="/add-listing"
+              element={
+                <ProtectedRoute>
+                  <AddListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signUp" element={<SignUp />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/listing/:id" element={<ListingDetail />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -14,10 +14,15 @@ Core features include:
 ## Repository Setup
   - Main branch is protected
   - Development work should be done in feature branches
-  - Pull Requests require review before mergin
+  - Pull Requests require review before merging
 
 ## Project Management
 We are using Jira to manage tasks and track progress
 Link to Jira: https://uflcen3101-group4-f25.atlassian.net/jira/software/projects/SCRUM/summary
 
 
+Team Roles: 
+Frontend Developer - Brando Santana
+Backend Developer - Rocco Tammone
+Full-Stack Developer - Joshua Rivera
+Database Administrator - Joseph Guzman
