@@ -77,4 +77,17 @@ export const api = {
       method: "POST",
       body: JSON.stringify(filters),
     }),
+  
+  getListing: (id) => request(`/listings/${encodeURIComponent(id)}`),
+  
+  updateListing: (id, data) =>
+    request(`/listings/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  
+  deleteListing: (id) =>
+    request(`/listings/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
 };

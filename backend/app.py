@@ -81,7 +81,95 @@ def list_listings():
           .limit(20)
           .stream()
     )
-    return jsonify([d.to_dict() for d in docs])
+    listings = []
+    for doc in docs:
+        listing_data = doc.to_dict()
+        listing_data["id"] = doc.id
+        # Convert timestamp if present
+        if "createdAt" in listing_data and isinstance(listing_data["createdAt"], datetime):
+            listing_data["createdAt"] = listing_data["createdAt"].isoformat()
+        listings.append(listing_data)
+    return jsonify(listings)
+
+# GET /listings/<id> - Get a single listing by ID
+@app.get("/listings/<id>")
+def get_listing(id):
+    """
+    Get a single listing by its document ID.
+    """
+    try:
+        doc_ref = db.collection("listings").document(id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return jsonify({"error": "Listing not found"}), 404
+        
+        listing_data = doc.to_dict()
+        listing_data["id"] = doc.id
+        # Convert timestamp if present
+        if "createdAt" in listing_data and isinstance(listing_data["createdAt"], datetime):
+            listing_data["createdAt"] = listing_data["createdAt"].isoformat()
+        
+        return jsonify(listing_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# PUT /listings/<id> - Update a listing
+@app.put("/listings/<id>")
+def update_listing(id):
+    """
+    Update a listing by its document ID.
+    """
+    try:
+        body = request.get_json(force=True) or {}
+        doc_ref = db.collection("listings").document(id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return jsonify({"error": "Listing not found"}), 404
+        
+        # Update the listing
+        updates = {}
+        allowed_fields = ["title", "price", "address", "contactName", "contactEmail", 
+                         "availableFrom", "availableTo", "parking", "furnished", "notes"]
+        
+        for field in allowed_fields:
+            if field in body:
+                updates[field] = body[field]
+        
+        if not updates:
+            return jsonify({"error": "No valid fields to update"}), 400
+        
+        doc_ref.update(updates)
+        
+        # Get updated listing
+        updated_doc = doc_ref.get()
+        listing_data = updated_doc.to_dict()
+        listing_data["id"] = updated_doc.id
+        if "createdAt" in listing_data and isinstance(listing_data["createdAt"], datetime):
+            listing_data["createdAt"] = listing_data["createdAt"].isoformat()
+        
+        return jsonify({"message": "Listing updated", "listing": listing_data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# DELETE /listings/<id> - Delete a listing
+@app.delete("/listings/<id>")
+def delete_listing(id):
+    """
+    Delete a listing by its document ID.
+    """
+    try:
+        doc_ref = db.collection("listings").document(id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return jsonify({"error": "Listing not found"}), 404
+        
+        doc_ref.delete()
+        return jsonify({"message": "Listing deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # POST /listings. make a "created at" timestampe for consistency
 @app.post("/listings")

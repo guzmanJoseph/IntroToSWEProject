@@ -253,12 +253,24 @@ export default function Profile() {
                   )}
                   <div className="flex space-x-3 mt-3">
                     <button 
-                      onClick={() => navigate(`/listing/${listing.id}`)}
+                      onClick={() => navigate(`/listing/${listing.id}`, { state: { listing } })}
                       className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                     >
                       View
                     </button>
-                    <button className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600">
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to delete this listing?")) {
+                          try {
+                            await api.deleteListing(listing.id);
+                            await loadUserListings();
+                          } catch (err) {
+                            alert(`Failed to delete: ${err.message}`);
+                          }
+                        }
+                      }}
+                      className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                    >
                       Delete
                     </button>
                   </div>
