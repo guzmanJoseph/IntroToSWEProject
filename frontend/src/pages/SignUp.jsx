@@ -6,10 +6,13 @@ import { api } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function SignUp() {
-  // Keep the extra fields visually (for later), but we only send email to backend
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rePassword, setRePassword] = useState("");
+  const [dob, setDob] = useState({ month: "", day: "", year: "" });
+  const [gender, setGender] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -20,20 +23,28 @@ export default function SignUp() {
     e.preventDefault();
     setMsg("");
     setErr("");
+    
+    // Validation
+    if (!password || password.length < 6) {
+      setErr("Password must be at least 6 characters");
+      return;
+    }
+    
+    if (password !== rePassword) {
+      setErr("Passwords do not match");
+      return;
+    }
+    
     setBusy(true);
     try {
-      const res = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE || "http://127.0.0.1:5000"
-        }/auth/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim() }),
-        }
+      const data = await api.register(
+        email.trim(),
+        password,
+        firstName.trim(),
+        lastName.trim(),
+        dob,
+        gender
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       
       const userEmail = data?.user?.email || email.trim();
       // Auto-login after successful registration
@@ -42,10 +53,20 @@ export default function SignUp() {
       setFirstName("");
       setLastName("");
       setEmail("");
+      setPassword("");
+      setRePassword("");
+      setDob({ month: "", day: "", year: "" });
+      setGender("");
       // Redirect to home after successful signup
       setTimeout(() => navigate("/"), 1000);
     } catch (e2) {
-      setErr(e2.message);
+      // Better error handling
+      if (e2.message.includes("Failed to fetch") || e2.message.includes("NetworkError")) {
+        setErr("Cannot connect to server. Make sure the backend is running on http://127.0.0.1:5000");
+      } else {
+        setErr(e2.message);
+      }
+      console.error("Signup error:", e2);
     } finally {
       setBusy(false);
     }
@@ -84,7 +105,8 @@ export default function SignUp() {
           <div className="mb-4 flex space-x-2">
             <select
               name="month"
-              value={FormData.month}
+              value={dob.month}
+              onChange={(e) => setDob({ ...dob, month: e.target.value })}
               className="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             >
@@ -111,7 +133,8 @@ export default function SignUp() {
 
             <select
               name="day"
-              value={FormData.day}
+              value={dob.day}
+              onChange={(e) => setDob({ ...dob, day: e.target.value })}
               className="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             >
@@ -125,7 +148,8 @@ export default function SignUp() {
 
             <select
               name="year"
-              value={FormData.year}
+              value={dob.year}
+              onChange={(e) => setDob({ ...dob, year: e.target.value })}
               className="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             >
@@ -146,6 +170,8 @@ export default function SignUp() {
           </label>
           <select
             name="gender"
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
             className="w-full p-2 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
@@ -172,16 +198,23 @@ export default function SignUp() {
           </label>
           <input
             type="password"
-            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password (min 6 characters)"
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+            minLength={6}
           />
           <label htmlFor="RePassword" className="form-label fw-semibold">
             Re-enter Password
           </label>
           <input
             type="password"
+            value={rePassword}
+            onChange={(e) => setRePassword(e.target.value)}
             placeholder="Repeat your password"
             className="w-full p-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
           />
 
           <button

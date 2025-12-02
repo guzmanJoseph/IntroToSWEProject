@@ -16,10 +16,23 @@ export const api = {
     request("/listings", { method: "POST", body: JSON.stringify(payload) }),
   
   // Authentication
-  login: (email) =>
+  login: (email, password) =>
     request("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, password }),
+    }),
+  
+  register: (email, password, firstName, lastName, dob, gender) =>
+    request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+        firstName,
+        lastName,
+        dob,
+        gender,
+      }),
     }),
   
   // Messaging endpoints
@@ -49,4 +62,13 @@ export const api = {
     }),
   
   getUser: (email) => request(`/users/${encodeURIComponent(email)}`),
+  
+  updateUser: (email, data) =>
+    request(`/users/${encodeURIComponent(email)}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  
+  getUserListings: (email) =>
+    request(`/listings/user/${encodeURIComponent(email)}`),
 };

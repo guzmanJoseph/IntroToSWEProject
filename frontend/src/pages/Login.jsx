@@ -18,7 +18,17 @@ export default function Login() {
     setMsg(""); setErr("");
     setBusy(true);
     try {
-      const res = await api.login(email.trim());
+      // Get password from form
+      const passwordInput = e.target.querySelector('input[type="password"]');
+      const password = passwordInput?.value || "";
+      
+      if (!password) {
+        setErr("Password is required");
+        setBusy(false);
+        return;
+      }
+      
+      const res = await api.login(email.trim(), password);
       const userEmail = res?.user?.email || email.trim();
       // Use AuthContext to set user
       login(userEmail);
@@ -50,13 +60,13 @@ export default function Login() {
             />
           </div>
 
-          {/* kept for UI parity; backend ignores passwords for now */}
           <div className="mb-3">
             <label className="form-label fw-semibold">Password</label>
             <input
               type="password"
               className="form-control"
               placeholder="Enter your password"
+              required
             />
           </div>
 

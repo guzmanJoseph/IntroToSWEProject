@@ -3,6 +3,7 @@ from flask_cors import CORS
 from datetime import datetime
 from firebase_admin_setup import db
 import json
+import hashlib
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
@@ -88,47 +89,186 @@ def create_listing():
     data = request.get_json(force=True)
     data = data or {}
     data["createdAt"] = datetime.utcnow()
-    db.collection("listings").add(data)
-    return jsonify({"ok": True}), 201
+    doc_ref = db.collection("listings").add(data)
+    # Return the created listing with its ID
+    listing_data = data.copy()
+    listing_data["id"] = doc_ref[1].id
+    if isinstance(listing_data.get("createdAt"), datetime):
+        listing_data["createdAt"] = listing_data["createdAt"].isoformat()
+    return jsonify({"ok": True, "listing": listing_data}), 201
+
+# GET /listings/user/<email> - Get all listings created by a user
+@app.get("/listings/user/<email>")
+def get_user_listings(email):
+    """
+    Get all listings created by a specific user (by contactEmail).
+    """
+    try:
+        listings_ref = db.collection("listings")
+        docs = listings_ref.where("contactEmail", "==", email).stream()
+        
+        listings = []
+        for doc in docs:
+            listing_data = doc.to_dict()
+            listing_data["id"] = doc.id
+            # Convert timestamp if present
+            if "createdAt" in listing_data and isinstance(listing_data["createdAt"], datetime):
+                listing_data["createdAt"] = listing_data["createdAt"].isoformat()
+            listings.append(listing_data)
+        
+        # Sort by createdAt, most recent first
+        listings.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
+        
+        return jsonify(listings), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 #### AUTHENTICATION ####
+def hash_password(password):
+    """Hash password using SHA-256 (for production, use bcrypt or similar)"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
 @app.post("/auth/register")
 def register_user():
   body = request.get_json(force=True) or {}
   email = body.get("email")
+  password = body.get("password")
+  firstName = body.get("firstName", "")
+  lastName = body.get("lastName", "")
+  dob = body.get("dob", {})
+  gender = body.get("gender", "")
 
   # Basic UF email check
   if not email or not email.endswith("@ufl.edu"):
       return jsonify({"error": "Email must be a @ufl.edu address"}), 400
+
+  # Password validation
+  if not password or len(password) < 6:
+      return jsonify({"error": "Password must be at least 6 characters"}), 400
 
   # See if a user doc with this email already exists
   existing = db.collection("users").where("email", "==", email).limit(1).get()
   if existing:
       return jsonify({"error": "User already exists"}), 400
 
+  # Hash password before storing
+  hashed_password = hash_password(password)
+
   user_doc = {
       "email": email,
+      "password": hashed_password,  # Store hashed password
+      "firstName": firstName,
+      "lastName": lastName,
+      "dob": dob,
+      "gender": gender,
       "createdAt": datetime.utcnow()
   }
-  db.collection("users").add(user_doc)
+  doc_ref = db.collection("users").add(user_doc)
+  user_doc["id"] = doc_ref[1].id
+  # Don't return password in response
+  user_response = {k: v for k, v in user_doc.items() if k != "password"}
 
-  # We return the user data we stored (no doc id here; you can include it later)
-  return jsonify({"message": "Registered", "user": user_doc}), 201
+  return jsonify({"message": "Registered", "user": user_response}), 201
 
 @app.post("/auth/login")
 def login_user():
   body = request.get_json(force=True) or {}
   email = body.get("email")
+  password = body.get("password")
 
   if not email or not email.endswith("@ufl.edu"):
       return jsonify({"error": "Email must be a @ufl.edu address"}), 400
 
+  if not password:
+      return jsonify({"error": "Password is required"}), 400
+
   # Look up that user in Firestore
   found = db.collection("users").where("email", "==", email).limit(1).get()
   if not found:
-      return jsonify({"error": "User not found"}), 404
+      return jsonify({"error": "Invalid email or password"}), 401
 
-  return jsonify({"message": "Login ok", "user": found[0].to_dict()}), 200
+  user_data = found[0].to_dict()
+  stored_password = user_data.get("password")
+  
+  # Verify password
+  hashed_input = hash_password(password)
+  if stored_password != hashed_input:
+      return jsonify({"error": "Invalid email or password"}), 401
+
+  # Don't return password in response
+  user_response = {k: v for k, v in user_data.items() if k != "password"}
+  user_response["id"] = found[0].id
+
+  return jsonify({"message": "Login ok", "user": user_response}), 200
+
+
+@app.get("/users/<email>")
+def get_user_profile(email):
+  """
+  Get user profile by email.
+  """
+  try:
+    users = db.collection("users").where("email", "==", email).limit(1).get()
+    if not users:
+      return jsonify({"error": "User not found"}), 404
+    
+    user_data = users[0].to_dict()
+    user_data["id"] = users[0].id
+    # Don't return password
+    user_response = {k: v for k, v in user_data.items() if k != "password"}
+    # Convert timestamp if present
+    if "createdAt" in user_response and isinstance(user_response["createdAt"], datetime):
+      user_response["createdAt"] = user_response["createdAt"].isoformat()
+    
+    return jsonify(user_response), 200
+  except Exception as e:
+    return jsonify({"error": str(e)}), 500
+
+
+@app.put("/users/<email>")
+def update_user_profile(email):
+  """
+  Update user profile. Requires email in URL and updated fields in body.
+  """
+  body = request.get_json(force=True) or {}
+  
+  try:
+    users = db.collection("users").where("email", "==", email).limit(1).get()
+    if not users:
+      return jsonify({"error": "User not found"}), 404
+    
+    user_doc = users[0]
+    user_data = user_doc.to_dict()
+    
+    # Update allowed fields (don't allow password or email changes here)
+    allowed_fields = ["firstName", "lastName", "dob", "gender", "phone", "bio", "profilepic", "university"]
+    updates = {}
+    
+    for field in allowed_fields:
+      if field in body:
+        updates[field] = body[field]
+    
+    # Update password if provided
+    if "password" in body and body["password"]:
+      if len(body["password"]) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+      updates["password"] = hash_password(body["password"])
+    
+    if not updates:
+      return jsonify({"error": "No valid fields to update"}), 400
+    
+    # Update in Firestore
+    user_doc.reference.update(updates)
+    
+    # Get updated user data
+    updated_user = user_doc.reference.get().to_dict()
+    updated_user["id"] = user_doc.id
+    # Don't return password
+    user_response = {k: v for k, v in updated_user.items() if k != "password"}
+    
+    return jsonify({"message": "Profile updated", "user": user_response}), 200
+  except Exception as e:
+    return jsonify({"error": str(e)}), 500
 
 
 @app.post("/listings/filter")
@@ -318,26 +458,6 @@ def mark_messages_read():
   return jsonify({"message": "marked as read", "count": updated_count}), 200
 
 
-@app.get("/users/<email>")
-def get_user_by_email(email):
-  """
-  Get user information by email.
-  Useful for getting user names to display in conversations.
-  """
-  try:
-    users = db.collection("users").where("email", "==", email).limit(1).get()
-    if not users:
-      return jsonify({"error": "User not found"}), 404
-    
-    user_data = users[0].to_dict()
-    user_data["id"] = users[0].id
-    # Convert timestamp if present
-    if "createdAt" in user_data and isinstance(user_data["createdAt"], datetime):
-      user_data["createdAt"] = user_data["createdAt"].isoformat()
-    
-    return jsonify(user_data), 200
-  except Exception as e:
-    return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
