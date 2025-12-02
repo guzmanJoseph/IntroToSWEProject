@@ -32,9 +32,7 @@ export default function Navbar() {
       {/* Right side */}
       <div className="flex items-center space-x-4">
         {isAuthenticated && (
-          <span className="text-sm text-gray-600">
-            {user?.email}
-          </span>
+          <span className="text-sm text-gray-600">{user?.email}</span>
         )}
         <Link
           to="/add-listing"
@@ -66,11 +64,7 @@ export default function Navbar() {
               <Link to="/profile" onClick={closeNav}>
                 Profile
               </Link>
-              <button
-                onClick={handleLogout}
-                className="text-left w-full px-4 py-2 hover:bg-gray-100"
-                style={{ border: "none", background: "transparent", cursor: "pointer" }}
-              >
+              <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>
             </>
