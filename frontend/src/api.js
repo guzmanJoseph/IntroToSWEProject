@@ -71,4 +71,10 @@ export const api = {
   
   getUserListings: (email) =>
     request(`/listings/user/${encodeURIComponent(email)}`),
+  
+  filterListings: (filters) =>
+    request("/listings/filter", {
+      method: "POST",
+      body: JSON.stringify(filters),
+    }),
 };

@@ -14,7 +14,7 @@ Core features include:
 ## Repository Setup
   - Main branch is protected
   - Development work should be done in feature branches
-  - Pull Requests require review before mergin
+  - Pull Requests require review before merging
 
 ## Project Management
 We are using Jira to manage tasks and track progress
