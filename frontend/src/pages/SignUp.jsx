@@ -1,7 +1,9 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./SignUp.css";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SignUp() {
   // Keep the extra fields visually (for later), but we only send email to backend
@@ -11,6 +13,8 @@ export default function SignUp() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -30,10 +34,16 @@ export default function SignUp() {
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      setMsg(`Registered: ${data?.user?.email || email}`);
+      
+      const userEmail = data?.user?.email || email.trim();
+      // Auto-login after successful registration
+      login(userEmail);
+      setMsg(`Registered and logged in: ${userEmail}`);
       setFirstName("");
       setLastName("");
       setEmail("");
+      // Redirect to home after successful signup
+      setTimeout(() => navigate("/"), 1000);
     } catch (e2) {
       setErr(e2.message);
     } finally {

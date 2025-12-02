@@ -14,4 +14,39 @@ export const api = {
   getListings: () => request("/listings"),
   createListing: (payload) =>
     request("/listings", { method: "POST", body: JSON.stringify(payload) }),
+  
+  // Authentication
+  login: (email) =>
+    request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  
+  // Messaging endpoints
+  sendMessage: (senderEmail, receiverEmail, text) =>
+    request("/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        sender_email: senderEmail,
+        receiver_email: receiverEmail,
+        text: text,
+      }),
+    }),
+  
+  getConversation: (senderEmail, receiverEmail) =>
+    request(`/messages?sender=${encodeURIComponent(senderEmail)}&receiver=${encodeURIComponent(receiverEmail)}`),
+  
+  getConversations: (userEmail) =>
+    request(`/messages/conversations?user_email=${encodeURIComponent(userEmail)}`),
+  
+  markMessagesRead: (userEmail, otherUserEmail) =>
+    request("/messages/read", {
+      method: "PUT",
+      body: JSON.stringify({
+        user_email: userEmail,
+        other_user_email: otherUserEmail,
+      }),
+    }),
+  
+  getUser: (email) => request(`/users/${encodeURIComponent(email)}`),
 };

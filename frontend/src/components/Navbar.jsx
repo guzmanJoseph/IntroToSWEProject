@@ -1,13 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import GKLogo from "../assets/GatorKeys-Logo.png";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import "./Navbar.css";
 
 export default function Navbar() {
   const [sideOpen, setSideOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const openNav = () => setSideOpen(true);
   const closeNav = () => setSideOpen(false);
+
+  const handleLogout = () => {
+    logout();
+    closeNav();
+    navigate("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-gray-200/0 backdrop-blur-md shadow-md z-50 h-20 flex items-center justify-between px-8">
@@ -22,6 +31,11 @@ export default function Navbar() {
 
       {/* Right side */}
       <div className="flex items-center space-x-4">
+        {isAuthenticated && (
+          <span className="text-sm text-gray-600">
+            {user?.email}
+          </span>
+        )}
         <Link
           to="/add-listing"
           className="text-lg font-semibold hover:text-orange-400"
@@ -47,12 +61,24 @@ export default function Navbar() {
           <Link to="/add-listing" onClick={closeNav}>
             Add Listing
           </Link>
-          <Link to="/login" onClick={closeNav}>
-            Log in or sign up
-          </Link>
-          <Link to="/profile" onClick={closeNav}>
-            Profile
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/profile" onClick={closeNav}>
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-left w-full px-4 py-2 hover:bg-gray-100"
+                style={{ border: "none", background: "transparent", cursor: "pointer" }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" onClick={closeNav}>
+              Log in or sign up
+            </Link>
+          )}
         </div>
 
         {/* Hamburger Button */}

@@ -1,13 +1,15 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./AddListing.css";
 import { api } from "../api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AddListing() {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [title, setTitle] = useState("");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -24,9 +26,24 @@ export default function AddListing() {
 
   const [startDate, endDate] = dateRange;
 
+  // Auto-fill user email from auth context
+  useEffect(() => {
+    if (user?.email) {
+      setUserEmail(user.email);
+    }
+  }, [user]);
+
   async function onSubmit(e) {
     e.preventDefault();
     setMsg(""); setErr("");
+
+    // Check if user is authenticated
+    if (!isAuthenticated || !user?.email) {
+      setErr("You must be logged in to post a listing");
+      navigate("/login");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -36,7 +53,7 @@ export default function AddListing() {
         category: "sublease",
         address: address.trim(),
         contactName: userName.trim(),
-        contactEmail: userEmail.trim().toLowerCase(),
+        contactEmail: user.email, // Use authenticated user's email
         availableFrom: startDate ? startDate.toISOString() : null,
         availableTo: endDate ? endDate.toISOString() : null,
         parking,
@@ -52,7 +69,7 @@ export default function AddListing() {
 
       setMsg("Listing submitted!");
       // reset
-      setTitle(""); setUserName(""); setUserEmail("");
+      setTitle(""); setUserName("");
       setAddress(""); setRent(""); setNotes("");
       setDateRange([null, null]); setParking(""); setFurnished(false);
       setTimeout(() => navigate("/"), 400);
@@ -88,8 +105,19 @@ export default function AddListing() {
 
               <div className="mb-3">
                 <label htmlFor="userEmail" className="form-label fw-semibold">Your Email</label>
-                <input type="email" id="userEmail" className="form-control" placeholder="yourname@ufl.edu"
-                  value={userEmail} onChange={(e)=>setUserEmail(e.target.value)} />
+                <input 
+                  type="email" 
+                  id="userEmail" 
+                  className="form-control" 
+                  placeholder="yourname@ufl.edu"
+                  value={userEmail} 
+                  onChange={(e)=>setUserEmail(e.target.value)}
+                  disabled={!!user?.email}
+                  title={user?.email ? "Email is set from your account" : ""}
+                />
+                {user?.email && (
+                  <small className="text-muted">Using your logged-in email: {user.email}</small>
+                )}
               </div>
 
               <div className="mb-3">

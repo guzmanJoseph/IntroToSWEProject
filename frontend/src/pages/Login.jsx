@@ -1,13 +1,17 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Login.css";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [busy, setBusy]   = useState(false);
   const [msg, setMsg]     = useState("");
   const [err, setErr]     = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -15,7 +19,12 @@ export default function Login() {
     setBusy(true);
     try {
       const res = await api.login(email.trim());
-      setMsg(`Login OK: ${res?.user?.email || email}`);
+      const userEmail = res?.user?.email || email.trim();
+      // Use AuthContext to set user
+      login(userEmail);
+      setMsg(`Login OK: ${userEmail}`);
+      // Redirect to home after successful login
+      setTimeout(() => navigate("/"), 1000);
     } catch (e2) {
       setErr(e2.message);
     } finally {

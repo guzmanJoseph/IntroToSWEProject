@@ -15,6 +15,8 @@ import ListingDetail from "./pages/ListingDetail";
 import Navbar from "./components/Navbar";
 import ScrollToTop from "./components/ScrollToTop";
 import ChatWidget from "./components/ChatWidget";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 import "./App.css";
 
 function Layout() {
@@ -30,22 +32,38 @@ function Layout() {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <ChatWidget />
-      {/* Routes */}
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/add-listing" element={<AddListing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signUp" element={<SignUp />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/listing/:id" element={<ListingDetail />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <ScrollToTop />
+        <ChatWidget />
+        {/* Routes */}
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route
+              path="/add-listing"
+              element={
+                <ProtectedRoute>
+                  <AddListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signUp" element={<SignUp />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/listing/:id" element={<ListingDetail />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
