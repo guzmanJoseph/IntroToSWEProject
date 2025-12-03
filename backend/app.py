@@ -6,7 +6,7 @@ import json
 import hashlib
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
+CORS(app, origins=["http://localhost:5173", "https://intro-to-swe-project.vercel.app/"], supports_credentials=True)
 
 # This will touch the client. If the something is wrong like credentials, an error will raise
 @app.get("/health")
