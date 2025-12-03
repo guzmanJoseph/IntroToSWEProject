@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { api } from "../api";
 import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const MessageBubble = ({ msg, currentUserEmail }) => {
   const isCurrentUser = msg.sender === currentUserEmail;
@@ -260,12 +261,11 @@ const ChatWidget = () => {
             <p className="text-gray-600 text-sm">
               Please log in to use messaging.
             </p>
-            <a
-              href="/login"
+            <Link to="/login"
               className="text-blue-600 hover:underline text-sm mt-2 inline-block"
             >
               Go to Login →
-            </a>
+            </Link>
           </div>
         )}
       </div>
