@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../contexts/AuthContext";
+import { Link } from "reach-router-dom"
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -79,9 +80,9 @@ export default function Login() {
 
           <p className="text-center mt-3 mb-0">
             Don't have an account?{" "}
-            <a href="/signUp" className="text-decoration-none text-primary">
+            <Link to="/signUp" className="text-decoration-none text-primary">
               Sign up Here
-            </a>
+            </Link>
           </p>
         </form>
       </div>
