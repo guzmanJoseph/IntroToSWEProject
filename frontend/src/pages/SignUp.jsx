@@ -42,9 +42,10 @@ export default function SignUp() {
         password,
         firstName.trim(),
         lastName.trim(),
-        dob,
+        `${dob.month} ${dob.day}, ${dob.year}`,
         gender
       );
+
       
       const userEmail = data?.user?.email || email.trim();
       // Auto-login after successful registration
