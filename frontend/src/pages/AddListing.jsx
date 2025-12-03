@@ -84,7 +84,7 @@ export default function AddListing() {
     <div className="add-listing-page">
       <div className="container py-5">
         <div className="text-center mb-5">
-          <h1 className="display-5 fw-bold text-primary">Add a New Listing (TEST)</h1>
+          <h1 className="display-5 fw-bold text-primary">Add a New Listing </h1>
           <p className="text-muted">Fill out the details below to post your sublease.</p>
         </div>
 
